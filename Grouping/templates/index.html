@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Data Display</title>
+</head>
+<body>
+    <h1>Data Display</h1>
+    <form method="POST" action="/next">
+        <input type="hidden" name="current_customer_no" value="{{ next_customer_no }}">
+        <button type="submit">Next</button>
+    </form>
+    <table>
+        <tr>
+            <th>CustomerNo</th>
+            <th>Date</th>
+            <th>NameAddress</th>
+            <th>FFNameAddress</th>
+            <th>Similarity</th>
+        </tr>
+        {% for row in data %}
+        <tr>
+            <td>{{ row.CustomerNo }}</td>
+            <td>{{ row.Date }}</td>
+            <td>{{ row.NameAddress }}</td>
+            <td>{{ row.FFNameAddress }}</td>
+            <td>{{ row.Similarity }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

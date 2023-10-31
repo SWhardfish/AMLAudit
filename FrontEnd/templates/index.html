@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Viewer</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+    <style>
+        .green-text {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <table id="dataTable" border="1">
+        <thead>
+            <tr>
+                <th>CustomerNo</th>
+                <th>NameAddress</th>
+                <th>FFNameAddress</th>
+                <th>Similarity</th>
+                <th>Match</th>
+                <th>Whitelist</th>
+                <th>Comment</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr>
+                <td>{{ row['CustomerNo'] }}</td>
+                <td>{{ row['NameAddress'] }}</td>
+                <td>{{ row['FFNameAddress'] }}</td>
+                <td class="{% if row['similarity'] == 100 %}green-text{% endif %}">{{ row['similarity'] }}</td>
+                <td><input type="checkbox" name="match"></td>
+                <td><input type="checkbox" name="whitelist"></td>
+                <td><input type="text" name="comment"></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#dataTable').DataTable({
+                paging: true
+            });
+        });
+    </script>
+</body>
+</html>
