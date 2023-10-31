@@ -49,11 +49,12 @@ for filename in os.listdir(directory_path):
         for payment in payments:
             PaymentRecord = payment.get("PaymentRecord(20)", {})
             CustomerNo = PaymentRecord.get("CustomerNo", "NotFound")
+            Amount = PaymentRecord.get("Amount", "")
             CompanyNumber = payment.get("CompanyNumber", "")
             Name = payment.get("Name", "")
             Address = payment.get("Address", "")
             City = payment.get("City", "")
-            NameAddress = f"{Name}, {Address} {City}"
+            BGMaxNameAddress = f"{Name}, {Address} {City}"
 
             if CompanyNumber:
                 matching_row = file2_df[file2_df['VAT Registration No_'] == CompanyNumber]
@@ -66,7 +67,7 @@ for filename in os.listdir(directory_path):
                     matching_row = file2_df[file2_df['No_'] == CustomerNo]
                     if not matching_row.empty:
                         FFNameAddress = matching_row.iloc[0]['FFNameAddress']
-                        similarity = fuzz.token_set_ratio(NameAddress, FFNameAddress)
+                        similarity = fuzz.token_set_ratio(BGMaxNameAddress, FFNameAddress)
                     else:
                         FFNameAddress = f'No CustomerNumber {CustomerNo} match in FF9 Customer Table'
                         similarity = 0
@@ -77,17 +78,23 @@ for filename in os.listdir(directory_path):
                 matching_row = file2_df[file2_df['No_'] == CustomerNo]
                 if not matching_row.empty:
                     FFNameAddress = matching_row.iloc[0]['FFNameAddress']
-                    similarity = fuzz.token_set_ratio(NameAddress, FFNameAddress)
+                    similarity = fuzz.token_set_ratio(BGMaxNameAddress, FFNameAddress)
                 else:
                     FFNameAddress = f'No CustomerNumber {CustomerNo} match in FF9 Customer Table'
                     similarity = 0
                     # Log the information
                     logging.info(f"No CustomerNumber match for {CustomerNo} in {filename}")
 
+            #Correct the Amount value- to remove the last two 00.
+            try:
+                Amount = int(Amount) / 100
+            except ValueError:
+                Amount = None  # You can set it to a default value or handle it in another way if needed
+
             # Append data to the CSV format
-            csv_data.append([CustomerNo, date, NameAddress, FFNameAddress, similarity])
+            csv_data.append([CustomerNo, date, BGMaxNameAddress, Amount, FFNameAddress, similarity])
 
         # Write the data to a CSV file
         output_filename = f'../BGMaxFiles/{year}/{month}/Matched/{os.path.splitext(os.path.basename(filename))[0]}_output.csv'
-        df = pd.DataFrame(csv_data, columns=["CustomerNo", "Date", "NameAddress", "FFNameAddress", "similarity"])
+        df = pd.DataFrame(csv_data, columns=["CustomerNo", "Date", "BGMaxNameAddress", "Amount", "FFNameAddress", "similarity"])
         df.to_csv(output_filename, index=False)
