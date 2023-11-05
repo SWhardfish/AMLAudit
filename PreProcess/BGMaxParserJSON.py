@@ -13,17 +13,18 @@ year = monthyear["year"]
 month = monthyear["month"]
 
 # Function to create a unique ID
-def generate_unique_id(data):
-    if 'header' in data:
-        if 'id' not in data['header']:
-            data['header']['id'] = 1
+def generate_unique_id(data, record_type, filename_prefix):
+    if record_type == 'payments':
+        if 'id' not in data:
+            data['id'] = 1
         else:
-            data['header']['id'] += 1
+            data['id'] += 1
+        return f'{filename_prefix}-{data["id"]}'
 
 # Define the regex pattern for rows starting with '20'
 regex_pattern_20 = r'^20.*([5|3|8|9]\d{7})([9|8|7|1]\d{6})([7][0-9])(.*[0][0])(.*[2159][4|5][0-9][0-9].*)'
 # Define the regex pattern for rows starting with '22'
-regex_pattern_22 = r'^22.*([5|3|8|9]\d{7})([9|8|7|1]\d{6})([7][0-9])((.|0)*[0][0])'
+regex_pattern_22 = r'^22.*([5|3|8|9]\d{7})([9|8|7|1]\d{6})([7][0-9])(.*[0][0])(.*[2159][4|5][0-9][0-9].*)'
 # Define the regex pattern for rows starting with '25'
 regex_pattern_25 = r'^25([5]\d{7})?([8]\d{6})?([7][0-9])?(.*d*[,][0-9][0-9])'
 
@@ -37,6 +38,9 @@ os.makedirs(output_dir, exist_ok=True)
 # List files in the input directory
 for filename in os.listdir(input_dir):
     if os.path.isfile(os.path.join(input_dir, filename)):
+        # Extract the last eight digits from the filename to use as a prefix
+        filename_prefix = re.search(r'(\d{8})$', filename).group(1)
+
         # Initialize variables for each file
         data = {}
         current_payment = {}
@@ -51,9 +55,7 @@ for filename in os.listdir(input_dir):
                 first_two_digits = line[:2]
 
                 if first_two_digits == '01':
-                    data['header'] = {
-                        'id': 1,
-                    }
+                    data['header'] = {}
                     date_match = re.search(r'((19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01]))', line)
                     if date_match:
                         data['header']['Date'] = date_match.group(0)
@@ -70,11 +72,11 @@ for filename in os.listdir(input_dir):
                 elif first_two_digits == '70':
                     data['header']['End'] = line[2:]
                 elif first_two_digits == '20':
-                    generate_unique_id(data)
+                    unique_id = generate_unique_id(data, 'payments', filename_prefix)
                     match = re.match(regex_pattern_20, line)
                     if match:
                         current_payment = {
-                            'id': data['header']['id'],
+                            'id': unique_id,
                             'PaymentRecord(20)': {
                                 'CustomerNo': match.group(1),
                                 'InvoiceNo': match.group(2),
@@ -85,7 +87,7 @@ for filename in os.listdir(input_dir):
                         }
                     else:
                         current_payment = {
-                            'id': data['header']['id'],
+                            'id': unique_id,
                             'PaymentRecord(20)': {
                                 'CustomerNo': 'NotFound',
                                 'InvoiceNo': 'NotFound',
@@ -134,7 +136,7 @@ for filename in os.listdir(input_dir):
 
         # Format the JSON structure
         formatted_data = {
-            'header': data['header'],
+            'header': data.get('header', {}),
             'payments': payments
         }
 
@@ -146,4 +148,4 @@ for filename in os.listdir(input_dir):
         with open(output_path, 'w', encoding='utf-8') as json_file:
             json.dump(formatted_data, json_file, ensure_ascii=False, indent=4)
 
-        print(f'Updated JSON file saved as {json_file}')
+        print(f'Updated JSON file saved as {output_path}')
