@@ -17,6 +17,8 @@ monthyear = config_object["MonthYear"]
 year = monthyear["year"]
 month = monthyear["month"]
 
+output_dir = f'../BGMaxFiles/{year}/{month}/Matched/'
+
 pd.set_option('display.max_rows', 10000)
 pd.set_option('display.max_columns', 100)
 pd.set_option('display.width', 1000)
@@ -25,7 +27,7 @@ pd.set_option('display.width', 1000)
 # Iterate over each JSON file in '../PreProcessed/'
 directory_path = f'../BGMaxFiles/{year}/{month}/Preprocessed/InvoiceProcessed/'
 # Ensure output directories exist
-os.makedirs(directory_path, exist_ok=True)
+os.makedirs(output_dir, exist_ok=True)
 for filename in os.listdir(directory_path):
     if filename.endswith('.json'):
         # Create an empty list to store data for the CSV for each file
