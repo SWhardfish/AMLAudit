@@ -7,7 +7,7 @@ def count_rows_in_csv(directory):
 
     # Loop through all files in the directory
     for filename in os.listdir(directory):
-        if filename.endswith(".csv"):
+        if filename.endswith(".json"):
             filepath = os.path.join(directory, filename)
             try:
                 with open(filepath, 'r', newline='', encoding='utf-8') as file:

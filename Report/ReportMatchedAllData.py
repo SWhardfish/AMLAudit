@@ -9,8 +9,8 @@ config_object.read("../config.ini")
 
 # Get the MonthYear
 monthyear = config_object["MonthYear"]
-years = [2023]  # Specify the years
-months = ["Jan", "Feb", "Mar", "Apr", "May"]  # Specify the months
+years = [2022, 2023]  # Specify the years
+months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]  # Specify the months
 
 def process_csv_file(file_path):
     similarity_counts = {'100%': 0, '99-90%': 0, '89-80%': 0, '79-70%': 0, '69-60%': 0,
@@ -58,6 +58,7 @@ def process_csv_file(file_path):
         return {'100%': 0, '99-90%': 0, '89-80%': 0, '79-70%': 0, '69-60%': 0,
                 '59-50%': 0, '49-40%': 0, '39-30%': 0, '29-20%': 0, '19-10%': 0,
                 '9-1%': 0, '0%': 0}
+    pass
 
 def iterate_csv_files(years, months):
     monthly_counts = {}  # Create a dictionary to store counts per month
@@ -65,20 +66,24 @@ def iterate_csv_files(years, months):
     for year in years:
         for month in months:
             directory_path = f'../BGMaxFiles/{year}/{month}/Matched'
-            monthly_counts[(year, month)] = {'100%': 0, '99-90%': 0, '89-80%': 0, '79-70%': 0, '69-60%': 0,
-                                              '59-50%': 0, '49-40%': 0, '39-30%': 0, '29-20%': 0, '19-10%': 0,
-                                              '9-1%': 0, '0%': 0}
 
-            for filename in os.listdir(directory_path):
-                if filename.endswith('.csv'):
-                    file_path = os.path.join(directory_path, filename)
-                    file_counts = process_csv_file(file_path)
+            if os.path.exists(directory_path):  # Check if the directory exists
+                monthly_counts[(year, month)] = {'100%': 0, '99-90%': 0, '89-80%': 0, '79-70%': 0, '69-60%': 0,
+                                                  '59-50%': 0, '49-40%': 0, '39-30%': 0, '29-20%': 0, '19-10%': 0,
+                                                  '9-1%': 0, '0%': 0}
 
-                    # Aggregate the counts for each file and month
-                    for key in monthly_counts[(year, month)]:
-                        monthly_counts[(year, month)][key] += file_counts[key]
+                for filename in os.listdir(directory_path):
+                    if filename.endswith('.csv'):
+                        file_path = os.path.join(directory_path, filename)
+                        file_counts = process_csv_file(file_path)
 
-                    print(f'Processed file: {filename} ({month} {year})')
+                        # Aggregate the counts for each file and month
+                        for key in monthly_counts[(year, month)]:
+                            monthly_counts[(year, month)][key] += file_counts[key]
+
+                        print(f'Processed file: {filename} ({month} {year})')
+            else:
+                print(f'Directory not found for {month} {year}. Skipping.')
 
     return monthly_counts  # Return monthly counts
 
@@ -95,10 +100,10 @@ def plot_similarity_occurrences(monthly_counts):
         month_categories[month_label] = occurrences
 
     num_months = len(month_categories)
-    width = 0.2
+    width = 0.05
     x = range(len(labels))
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(16, 7))
 
     for i, (month_label, occurrences) in enumerate(month_categories.items()):
         x_pos = [pos + i * width for pos in x]

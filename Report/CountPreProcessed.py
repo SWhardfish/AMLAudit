@@ -1,40 +1,43 @@
 import os
+import json
+import calendar
+import matplotlib.pyplot as plt
 
-# Directory to count rows
-preprocessed_directory = "../BGMaxFiles/2023/Jan/PreProcessed"
+# Base directory for the data
+base_directory = "../BGMaxFiles"
 
-# Initialize counts for each pattern
-pattern_counts_additional = {"Complete with Customer Number": 0, "Incomplete missing Customer Number": 0}
+# Initialize a variable to store the total count of 'id' in JSON files
+total_count = 0
 
-# Function to count rows based on patterns
-def count_rows(file_path):
-    start_with_number_pattern = "^(\d+),"
-    start_with_empty_pattern = "^,(\d+),"
+# Iterate over the years (2022 and 2023)
+for year in [2022, 2023]:
+    for month in range(1, 13):
+        month_name = f"{year}/{calendar.month_abbr[month]}"
+        month_directory = os.path.join(base_directory, month_name, "PreProcessed/InvoiceProcessed")
 
-    with open(file_path, 'r', encoding="utf8") as file:
-        # Skip the header line
-        next(file)
-        # Iterate over each line in the file
-        for line in file:
-            if line.strip() == '':
-                continue  # Skip empty lines
-            # Check if the line matches start_with_number pattern
-            if line.strip().startswith(tuple(str(i) for i in range(10))):
-                pattern_counts_additional["Complete with Customer Number"] += 1
-            # Check if the line matches start_with_empty pattern
-            elif line.strip().startswith(','):
-                pattern_counts_additional["Incomplete missing Customer Number"] += 1
+        # Check if the directory for the month exists
+        if os.path.exists(month_directory):
+            # List all files in the directory
+            files = os.listdir(month_directory)
 
-# Iterate over the files in the additional directory
-for filename in os.listdir(preprocessed_directory):
-    if os.path.isfile(os.path.join(preprocessed_directory, filename)):
-        count_rows(os.path.join(preprocessed_directory, filename))
+            # Check if the directory is not empty
+            if len(files) > 0:
+                for filename in files:
+                    file_path = os.path.join(month_directory, filename)
+                    if os.path.isfile(file_path) and filename.endswith('.json'):
+                        with open(file_path, 'r', encoding="utf8") as file:
+                            data = json.load(file)
+                            if 'payments' in data and isinstance(data['payments'], list):
+                                for payment in data['payments']:
+                                    if 'id' in payment:
+                                        total_count += 1
 
-# Print the counts for the additional directory
-for pattern, count in pattern_counts_additional.items():
-    print(f"Count Preprocessed records '{pattern}': {count}")
-
-# Calculate the total count for the additional directory
-total_count_additional = sum(pattern_counts_additional.values())
-
-print(f"Total count for Preprocessed directory: {total_count_additional}")
+# Plot the total count in a single bar
+plt.figure(figsize=(6, 6))
+plt.bar("Total", total_count)
+plt.text(0, total_count + 10, f"Total: {total_count}", ha='center', fontsize=12)  # Display the total count
+plt.xlabel("Total")
+plt.ylabel("Count of 'id' in JSON files")
+plt.title("Count of 'id' in JSON files for 2022 and 2023")
+plt.tight_layout()
+plt.show()
